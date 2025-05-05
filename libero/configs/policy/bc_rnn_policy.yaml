@@ -4,8 +4,8 @@ text_embed_size: 32
 
 rnn_hidden_size: 1024
 rnn_num_layers: 2
-rnn_dropout: 0.0
-rnn_bidirectional: false
+rnn_dropout: 0.1
+rnn_bidirectional: true
 
 defaults:
     - data_augmentation@color_aug: batch_wise_img_color_jitter_group_aug.yaml

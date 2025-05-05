@@ -1,0 +1,7 @@
+network: DeterministicHead
+
+network_kwargs:
+    hidden_size: 1024
+
+loss_kwargs:
+    num_layers: 2
