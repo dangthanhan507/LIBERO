@@ -1,5 +1,5 @@
 from pointcloud import get_rgbd_image, get_point_cloud, get_colored_point_cloud
-from robosuite.utils.camera_utils import get_camera_intrinsic_matrix
+from robosuite.utils.camera_utils import get_camera_intrinsic_matrix, get_camera_extrinsic_matrix
 from libero.libero import get_libero_path
 from libero.libero.envs import OffScreenRenderEnv
 import robosuite.utils.transform_utils as T
@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import h5py
 import json
+from robosuite.utils.camera_utils import get_real_depth_map
 
 def get_benchmark_demo_files(datasets_path: Path, dataset_name: str) -> list:
     benchmark_path = Path(datasets_path)/dataset_name
@@ -51,7 +52,11 @@ def get_rerendered_observations_and_intrinsics(states, env_kwargs: dict) -> dict
         for name in obs_names:
             observations[name] = []
 
-        observations[f'{key_camera_name}_intrinsic'] = get_camera_intrinsic_matrix(env.sim, camera_name, camera_height, camera_width)
+        observations[f'{key_camera_name}_intrinsics'] = get_camera_intrinsic_matrix(env.sim, camera_name, camera_height, camera_width)
+        observations[f'{key_camera_name}_intrinsics'] = np.repeat(observations[f'{key_camera_name}_intrinsics'][np.newaxis, ...], states.shape[0], axis=0)
+        
+        observations[f'{key_camera_name}_extrinsics'] = get_camera_extrinsic_matrix(env.sim, camera_name)
+        observations[f'{key_camera_name}_extrinsics'] = np.repeat(observations[f'{key_camera_name}_extrinsics'][np.newaxis, ...], states.shape[0], axis=0)
         observations[f'{key_camera_name}_position'] = get_camera_position(env.sim, camera_name),
 
     for state in states:
@@ -59,7 +64,8 @@ def get_rerendered_observations_and_intrinsics(states, env_kwargs: dict) -> dict
 
         for camera_name in camera_names:
             key_camera_name = str(camera_name).replace('robot0_', '')
-            rgb_img, depth_img = observation[camera_name + "_image"], observation[camera_name + "_depth"]
+            # rgb_img, depth_img = observation[camera_name + "_image"], observation[camera_name + "_depth"]
+            rgb_img, depth_img = observation[camera_name + "_image"], get_real_depth_map(env.sim,observation[camera_name + "_depth"])
 
             observations[f'{key_camera_name}_rgb'].append(rgb_img)
             observations[f'{key_camera_name}_depth'].append(depth_img)
